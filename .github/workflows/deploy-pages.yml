@@ -1,0 +1,67 @@
+
+name: Deploy Expense Tracker to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Assemble static site and public config
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          python3 - <<'PYTHON'
+          import json, os, pathlib, re, shutil
+          dest = pathlib.Path('_site')
+          dest.mkdir(exist_ok=True)
+
+          for name in ('index.html', 'app.js', 'core.js', 'style.css'):
+              shutil.copy2(name, dest/name)
+
+          url = os.environ.get('SUPABASE_URL', '').strip().rstrip('/')
+          key = os.environ.get('SUPABASE_PUBLISHABLE_KEY', '').strip()
+
+          if not re.fullmatch(r'https://[a-z0-9-]+\.supabase\.co', url):
+              raise SystemExit('SUPABASE_URL missing or invalid.')
+
+          if not (key.startswith('sb_publishable_') or key.startswith('eyJ')):
+              raise SystemExit('Invalid public Supabase key.')
+
+          (dest/'config.js').write_text(
+              'export const SUPABASE_URL = ' + json.dumps(url) + ';\n'
+              'export const SUPABASE_PUBLISHABLE_KEY = ' + json.dumps(key) + ';\n',
+              encoding='utf-8'
+          )
+          PYTHON
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
