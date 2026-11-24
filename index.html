@@ -1,56 +1,251 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>Document</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f7fb">
+  <meta name="description" content="Expense Tracker — особистий облік готівки.">
+  <title>Expense Tracker — 3D</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script type="module" src="app.js"></script>
 </head>
 <body>
-    <div class="app-wraper">
-        <div class="main-content">
-            <h1>Expense Tracker</h1>
-            
-            <h2>Balance</h2>
-            
-            <div class="balance-value"><h1 id="balance">0.00₴</h1></div>
-            
-            <div class="inc-exp-container">
-                <div>
-                    <h4>INCOME</h4>
-                    <p class="inc-text">+0.00₴</p>
+  <div class="app-frame">
+    <header class="site-header">
+      <div class="brand" aria-label="Expense Tracker">
+        <span class="brand-symbol" aria-hidden="true"><span></span><span></span></span>
+        <span class="brand-wordmark">Expense Tracker</span>
+        <span class="build-pill">EXPENSE TRACKER</span>
+      </div>
+      <div class="cloud-user" id="cloudUser" hidden><span id="cloudUserEmail"></span><button type="button" id="cloudSignOut">Вийти</button></div>
+      <button class="theme-switch" id="themeSwitch" type="button" aria-label="Увімкнути темну тему" title="Змінити тему">
+        <svg id="moonIcon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.9 13A9 9 0 0 1 11 3.1 9 9 0 1 0 20.9 13Z"/></svg>
+        <svg id="sunIcon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+    </header>
+
+    <p id="cloudStatus" class="cloud-status" role="status" aria-live="polite" hidden></p>
+    <main>
+      <section class="auth-view" id="authView">
+        <div class="auth-panel">
+          <span class="stats-overline">EXPENSE TRACKER</span>
+          <h1 id="authHeading">Особистий акаунт</h1>
+          <p id="authHelp">Увійди, щоб відкрити свій гаманець.</p>
+          <form id="cloudAuthForm" class="cloud-auth-form">
+            <label for="cloudEmail">Email</label>
+            <input id="cloudEmail" type="email" autocomplete="email" required>
+            <label for="cloudPassword" id="cloudPasswordLabel">Пароль</label>
+            <input id="cloudPassword" type="password" minlength="6" autocomplete="current-password" required>
+            <div class="cloud-auth-actions">
+              <button type="submit" id="cloudSignIn" class="cloud-primary">Увійти</button>
+              <button type="button" id="cloudSignUp">Реєстрація</button>
+            </div>
+          </form>
+          <button type="button" id="cloudForgotPassword" class="cloud-link">Забули пароль?</button>
+
+          <!-- Password recovery is isolated from the existing sign-in and wallet UI. -->
+          <form id="cloudRecoveryRequestForm" class="cloud-auth-form" hidden>
+            <label for="cloudRecoveryEmail" id="cloudRecoveryEmailLabel">Email</label>
+            <input id="cloudRecoveryEmail" type="email" autocomplete="email" required>
+            <div class="cloud-auth-actions">
+              <button type="submit" id="cloudRecoverySend" class="cloud-primary">Надіслати лист</button>
+              <button type="button" id="cloudRecoveryCancel">Назад до входу</button>
+            </div>
+          </form>
+
+          <form id="cloudNewPasswordForm" class="cloud-auth-form" hidden>
+            <label for="cloudNewPassword" id="cloudNewPasswordLabel">Новий пароль</label>
+            <input id="cloudNewPassword" type="password" minlength="6" autocomplete="new-password" required>
+            <label for="cloudConfirmPassword" id="cloudConfirmPasswordLabel">Повторіть пароль</label>
+            <input id="cloudConfirmPassword" type="password" minlength="6" autocomplete="new-password" required>
+            <div class="cloud-auth-actions">
+              <button type="submit" id="cloudPasswordSave" class="cloud-primary">Зберегти пароль</button>
+            </div>
+          </form>
+        </div>
+      </section>
+      <section class="hub" id="hub" hidden aria-labelledby="hubTitle">
+        <div class="hub-headline">
+          <div class="eyebrow"><span class="status-dot" aria-hidden="true"></span> EXPENSE TRACKER <span class="eyebrow-divider">/</span> INTERACTIVE CONCEPT</div>
+          <h1 id="hubTitle">Один рух.<br><span>Два режими.</span></h1>
+          <p>Обери, з якого боку почати: керуй готівкою або переглядай фінансову картину.</p>
+        </div>
+
+        <div class="scene" id="scene">
+          <div class="scene-halo scene-halo--outer" aria-hidden="true"></div>
+          <div class="scene-halo scene-halo--inner" aria-hidden="true"></div>
+          <div class="card-shadow" aria-hidden="true"></div>
+          <div class="card-shell" id="cardShell">
+            <div class="card-flip" id="cardFlip">
+              <div class="card-face card-front">
+                <div class="face-grain" aria-hidden="true"></div>
+                <div class="face-top" aria-hidden="true"><span>EXPENSE / TRACKER</span><span class="face-chip"><i></i><i></i></span></div>
+                <div class="card-zones">
+                  <button class="card-zone zone-wallet" id="walletTarget" type="button" aria-label="Відкрити гаманець">
+                    <span class="zone-number">01 / CONTROL</span>
+                    <span class="zone-icon" aria-hidden="true">
+                      <svg viewBox="0 0 28 28" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="21" height="16" rx="3"/><path d="M4.5 8V6a3 3 0 0 1 3-3h13"/><path d="M19 13h5.5v5H19a2.5 2.5 0 0 1 0-5Z"/><circle cx="19.5" cy="15.5" r=".7" fill="currentColor" stroke="none"/></svg>
+                    </span>
+                    <span class="zone-title">Гаманець</span>
+                    <span class="zone-caption">Доходи та витрати</span>
+                    <span class="zone-arrow" aria-hidden="true">↗</span>
+                  </button>
+                  <button class="card-zone zone-stats" id="statsTarget" type="button" aria-label="Відкрити статистику">
+                    <span class="zone-number">02 / INSIGHTS</span>
+                    <span class="zone-icon" aria-hidden="true">
+                      <svg viewBox="0 0 28 28" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 24V5m0 19h20"/><rect x="8" y="14" width="3.5" height="7" rx="1"/><rect x="14" y="9" width="3.5" height="12" rx="1"/><rect x="20" y="5" width="3.5" height="16" rx="1"/></svg>
+                    </span>
+                    <span class="zone-title">Статистика</span>
+                    <span class="zone-caption">Історія та аналітика</span>
+                    <span class="zone-arrow" aria-hidden="true">↗</span>
+                  </button>
                 </div>
-                <div>
-                    <h4>EXPENSE</h4>
-                    <p class="exp-text">-0.00₴</p>
+                <div class="face-bottom" aria-hidden="true"><span>YOUR MONEY. YOUR VIEW.</span><span>ET — 02</span></div>
+              </div>
+              <div class="card-face card-back" aria-hidden="true">
+                <div class="back-grid"></div>
+                <div class="back-top"><span>EXPENSE TRACKER</span><span>02 / INSIGHTS</span></div>
+                <div class="back-center">
+                  <div class="back-logo" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+                  <div class="back-title">INSIGHTS<span class="back-dot">.</span></div>
+                  <p>Зрозумілий погляд на свої гроші</p>
                 </div>
+                <div class="back-bottom"><span>SPEND SMARTER</span><span>EXPLORE →</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hub-footer">
+          <span><span class="mini-dot purple" aria-hidden="true"></span> Ліворуч — гаманець</span>
+          <span class="footer-divider"></span>
+          <span><span class="mini-dot white" aria-hidden="true"></span> Праворуч — статистика</span>
+        </div>
+        <p class="hint">Наведи курсор або натисни на одну зі сторін картки</p>
+      </section>
+
+      <!-- Stage 3D.3: faithful presentation of the existing simple Expense Tracker.
+           All values and actions are demo-only, never connected to Supabase. -->
+      <section class="view wallet-view" id="walletView" aria-labelledby="walletHeading" hidden>
+        <div class="wallet-original">
+          <div class="wallet-utility-line">
+            <button type="button" class="back-button wallet-back" data-back aria-label="Повернутися до 3D-картки" data-wallet-back><span aria-hidden="true">←</span> <span data-wallet-i18n="returnCard">До картки</span></button>
+            <div class="wallet-controls">
+              <label class="wallet-sr-only" for="walletLanguage" data-wallet-i18n="language">Мова</label>
+              <select id="walletLanguage" class="wallet-language" aria-label="Мова">
+                <option value="uk">УКР</option><option value="en">ENG</option>
+              </select>
+              <button id="walletTheme" class="wallet-theme" type="button" title="Змінити тему" aria-label="Перемкнути тему"><span id="walletThemeGlyph" aria-hidden="true">☾</span></button>
+            </div>
+          </div>
+          <header class="wallet-app-heading">
+            <h2 id="walletHeading">Expense Tracker</h2>
+            <p data-wallet-i18n="subtitle">Мій гаманець · Готівка</p>
+            <span class="wallet-demo-disclaimer" data-wallet-i18n="demoNoticeShort">Збережено у хмарі</span>
+          </header>
+
+          <section class="wallet-balance" aria-label="Поточний баланс">
+            <h3 data-wallet-i18n="balance">Баланс</h3>
+            <p class="wallet-balance-value" id="walletBalance">131 750 ₴</p>
+            <div class="wallet-summary">
+              <div><h4 data-wallet-i18n="incomeUpper">ДОХОДИ</h4><p class="wallet-sum-positive" id="walletIncome">+12 500 ₴</p></div>
+              <div><h4 data-wallet-i18n="expenseUpper">ВИТРАТИ</h4><p class="wallet-sum-negative" id="walletExpense">−750 ₴</p></div>
+            </div>
+          </section>
+
+          <section class="wallet-history" aria-labelledby="walletHistoryHeading">
+            <h3 id="walletHistoryHeading" data-wallet-i18n="history">Історія</h3>
+            <ul class="wallet-history-list" id="walletHistoryList" aria-label="П'ять останніх операцій"></ul>
+            <p id="walletHistoryEmpty" class="wallet-muted" data-wallet-i18n="emptyHistory" hidden>Операцій поки немає</p>
+          </section>
+
+          <section class="wallet-add" aria-labelledby="walletAddHeading">
+            <h3 id="walletAddHeading" data-wallet-i18n="addHeading">Додати транзакцію</h3>
+            <div class="wallet-type-switch" role="group" aria-label="Тип транзакції">
+              <button class="wallet-type-option active" id="demoExpense" type="button" aria-pressed="true" data-wallet-i18n="expenseChoice">− Витрата</button>
+              <button class="wallet-type-option" id="demoIncome" type="button" aria-pressed="false" data-wallet-i18n="incomeChoice">+ Дохід</button>
+            </div>
+            <form class="wallet-demo-form" id="demoForm" novalidate>
+              <label for="demoDescription" data-wallet-i18n="description">Опис</label>
+              <input id="demoDescription" type="text" placeholder="Наприклад, продукти" maxlength="160" autocomplete="off" required>
+              <label for="demoAmount" data-wallet-i18n="amount">Сума, ₴</label>
+              <input id="demoAmount" type="text" placeholder="0,00" inputmode="decimal" autocomplete="off" required>
+              <button type="submit" class="wallet-add-button" id="demoSubmit" data-wallet-i18n="addExpense">Додати витрату</button>
+            </form>
+            <p class="wallet-form-notice" id="demoNotice" role="status" aria-live="polite" data-wallet-i18n="demoHint"></p>
+          </section>
+        </div>
+      </section>
+
+      <!-- Stage 3D.4: demo-only Financial Timeline. Entirely isolated from the
+           approved card, Front UI, Tilt & Zoom and production Supabase project. -->
+      <section class="view stats-timeline-view" id="statsView" aria-labelledby="statsHeading" hidden>
+        <div class="stats-timeline-shell">
+          <div class="stats-utility-line">
+            <button type="button" class="back-button stats-back" data-back aria-label="Повернутися до 3D-картки" id="statsBack"><span aria-hidden="true">←</span> <span id="statsBackText">До картки</span></button>
+            <div class="stats-utilities">
+              <label class="stats-visually-hidden" for="statsLanguage" id="statsLanguageLabel">Мова</label>
+              <select id="statsLanguage" aria-labelledby="statsLanguageLabel" class="stats-language" title="Мова">
+                <option value="uk">УКР</option>
+                <option value="en">ENG</option>
+              </select>
+              <span class="stats-view-index">02 / HISTORY</span>
+            </div>
+          </div>
+
+          <header class="stats-page-heading">
+            <span class="stats-overline">02 / FINANCIAL TIMELINE</span>
+            <h2 id="statsHeading"><span id="statsHeadingText">Історія</span><span class="stats-heading-dot">.</span></h2>
+            <p id="statsIntro">Усі надходження та витрати за вибраний місяць.</p>
+          </header>
+
+          <div class="stats-demo-note"><span class="mini-dot purple" aria-hidden="true"></span><span id="statsDemoNotice">ЗАХИЩЕНЕ ХМАРНЕ ЗБЕРЕЖЕННЯ</span></div>
+
+          <section class="stats-month-summary" aria-labelledby="statsSpendLabel">
+            <div class="stats-summary-top">
+              <div class="stats-spend-wrap">
+                <h3 id="statsSpendLabel">Витрати за місяць</h3>
+                <p class="stats-spend-total" id="statsSpendTotal" aria-live="polite">0 ₴</p>
+              </div>
+              <div class="stats-month-picker">
+                <label for="statsMonth" class="stats-visually-hidden" id="statsMonthLabel">Місяць</label>
+                <select id="statsMonth" aria-labelledby="statsMonthLabel"></select>
+              </div>
             </div>
 
-            <div class="history">
-                <h3>History</h3>
-                <ul id="list" class="transactions-list"></ul>
+            <div class="stats-chart-card">
+              <div class="stats-chart-header">
+                <h3 id="statsChartHeading">Динаміка витрат</h3>
+                <span id="statsChartSubheading">За тижнями</span>
+              </div>
+              <div class="stats-chart" id="statsChart" role="group" aria-label="Витрати за тижнями"></div>
             </div>
+          </section>
 
-            <div class="new-transaction-container">    
-                <h3>Add new transaction</h3> 
-                <div class="desc-container"> 
-                    <p>Description</p>
-                    <input type="text" id="transaction-desc"/>
-                </div>
-                <div class="amount-container">
-                    <p>Amount</p>
-                    <input id="transaction-amount" type="number"/>
-                </div>
+          <section class="stats-history-section" aria-labelledby="statsHistoryTitle">
+            <div class="stats-history-title-row">
+              <h3 id="statsHistoryTitle">Транзакції</h3>
+              <span class="stats-history-meta" id="statsHistoryMeta">За місяць</span>
             </div>
+            <div id="statsTimeline" class="stats-timeline" aria-live="polite"></div>
+            <p id="statsHistoryEmpty" class="stats-empty" hidden>У цьому місяці ще немає операцій.</p>
+          </section>
+        </div>
+      </section>
+    </main>
 
-
-            <button class="add-transaction-button">Add transaction</button>
-            
-
-
-    </div>
-</div>
-<script src="app.js"> </script>
+    <footer class="site-footer"><span>EXPENSE TRACKER</span><span>ПЕРСОНАЛЬНИЙ ОБЛІК ГОТІВКИ</span></footer>
+  </div>
+  <dialog id="openingDialog" class="opening-dialog" aria-labelledby="openingHeading">
+    <form id="openingForm" class="opening-form" novalidate>
+      <h2 id="openingHeading">Вітаємо в Expense Tracker!</h2>
+      <p id="openingIntro">Скільки готівки у вас зараз є? Можна почати з 0 ₴.</p>
+      <label for="openingAmount" id="openingAmountLabel">Початковий баланс, ₴</label>
+      <input id="openingAmount" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off" required autofocus>
+      <p id="openingError" class="cloud-inline-error" aria-live="assertive"></p>
+      <button type="submit" class="cloud-primary" id="openingSubmit">Почати</button>
+    </form>
+  </dialog>
 </body>
 </html>
